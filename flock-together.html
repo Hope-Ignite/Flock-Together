@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flock Together — a think-alike party game</title>
+<meta name="description" content="A free online party game: think like the crowd, don't be the black sheep.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4EFE2; --card:#FFFDF7; --ink:#1E2A23; --muted:#66705F; --line:#E2DACA;
+  --green:#2F6B4F; --green-2:#3E8A66; --green-soft:#DDEBDF;
+  --sun:#F2B544; --sun-soft:#FBE9C3; --rose:#C9553D; --dark:#23211F;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(1200px 400px at 50% -120px,#E6F0E1 0%,transparent 70%),var(--bg)}
+#app{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+h1,h2,h3,.display{font-family:Fredoka,Nunito,sans-serif;letter-spacing:.2px;margin:0}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:13px 18px;font-weight:800;transition:transform .08s,background .15s,opacity .15s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn{background:var(--green);color:#fff}
+.btn:hover:not(:disabled){background:var(--green-2)}
+.btn-sun{background:var(--sun);color:var(--dark)}
+.btn-ghost{background:transparent;color:var(--green);border:2px solid var(--green-soft)}
+.btn-ghost:hover{background:var(--green-soft)}
+.btn-small{padding:8px 12px;font-size:14px;border-radius:11px}
+.btn-block{width:100%}
+input,select{font:inherit;width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--green-2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:0 2px 0 rgba(30,42,35,.05);margin-top:14px}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{min-width:0}
+.grow{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.center{text-align:center}
+.err{color:var(--rose);font-weight:700;margin-top:10px}
+.note{background:var(--sun-soft);border-radius:14px;padding:12px 14px;font-size:14px;margin-top:12px}
+.hero{text-align:center;padding:18px 0 4px}
+.hero h1{font-size:44px;color:var(--green);line-height:1}
+.hero p{margin:8px 0 0;color:var(--muted);font-weight:600}
+.logo{display:inline-flex;gap:2px;align-items:flex-end;margin-bottom:6px}
+.divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;font-weight:700;margin:16px 0}
+.divider:before,.divider:after{content:"";flex:1;height:1px;background:var(--line)}
+label.lbl{display:block;font-weight:800;font-size:14px;margin:0 0 6px}
+.topbar{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:800;font-size:14px}
+.dot{width:9px;height:9px;border-radius:50%;background:#bbb;display:inline-block}
+.dot.on{background:#3DB36B}
+.codebig{font-family:Fredoka;font-size:56px;letter-spacing:8px;color:var(--green);text-align:center;margin:6px 0}
+.qcard{background:var(--green);color:#fff;border:0;text-align:center;padding:26px 20px}
+.qcard .qn{font-weight:800;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;opacity:.75}
+.qcard .q{font-family:Fredoka;font-size:28px;line-height:1.2;margin-top:8px}
+.players{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;display:inline-flex;gap:6px;align-items:center}
+.pchip.done{background:var(--green-soft);border-color:#BFD8C4}
+.pchip.off{opacity:.45}
+.score-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.score-row:last-child{border-bottom:0}
+.score-row .nm{flex:1;font-weight:700;display:flex;align-items:center;gap:6px;min-width:0}
+.score-row .nm span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-row .pts{font-family:Fredoka;font-size:20px;color:var(--green);min-width:28px;text-align:right}
+.score-row.off{opacity:.5}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;width:70px}
+.bar>i{display:block;height:100%;background:var(--sun)}
+.you{font-size:11px;font-weight:800;background:var(--sun-soft);border-radius:6px;padding:1px 6px;color:#7a5a12}
+.groups{display:grid;gap:10px;margin-top:4px}
+.group{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px 14px;color:var(--ink);font-weight:600}
+.group .ans{font-family:Fredoka;font-size:22px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.group .cnt{background:var(--bg);border-radius:999px;font-size:14px;padding:3px 10px;font-family:Nunito;font-weight:800;white-space:nowrap}
+.group .who{font-size:14px;color:var(--muted);margin-top:4px}
+.group .alts{font-size:13px;color:var(--muted);margin-top:2px;font-style:italic}
+.group.sel{border-color:var(--sun);background:var(--sun-soft)}
+.group.herd{border-color:var(--green-2);background:var(--green-soft)}
+.group.lone{border-color:var(--dark);background:#ECE8E0}
+.result{font-size:18px;font-weight:700;line-height:1.45}
+.result p{margin:6px 0}
+.bigwin{font-family:Fredoka;font-size:34px;color:var(--green);text-align:center;line-height:1.15}
+.actions{display:grid;gap:10px;margin-top:14px}
+.actions.two{grid-template-columns:1fr 1fr}
+details summary{cursor:pointer;font-weight:800;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary:after{content:" ▾";color:var(--muted)}
+details[open] summary:after{content:" ▴"}
+.rules li{margin:6px 0}
+.mine{background:var(--green-soft);border-radius:14px;padding:12px 14px;font-weight:700;margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.deckq{font-family:Fredoka;font-size:34px;line-height:1.2;text-align:center;padding:30px 10px;min-height:180px;display:flex;align-items:center;justify-content:center}
+.sheepsvg{display:inline-block;vertical-align:middle}
+.hostbadge{font-size:11px;font-weight:800;background:var(--green);color:#fff;border-radius:6px;padding:1px 6px}
+.waiting{text-align:center;padding:26px 10px}
+.waiting .display{font-size:22px;margin-top:8px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bob{animation:bob 1.6s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+"use strict";
+/* ---------- Question bank (original prompts) ---------- */
+const QUESTIONS = [
+  // Everyday
+  "Name a fruit that's yellow","The best pizza topping","A colour of the rainbow","The best day of the week",
+  "Something you find in a kitchen drawer","A sport played with a ball","The best ice cream flavour",
+  "A planet in our solar system","Something people lose all the time","The most useful app on your phone",
+  "A word that rhymes with “cat”","Something that's always cold","The best breakfast food","An animal with stripes",
+  "A country you'd love to visit","Name a board game","Something you bring to the beach","The scariest animal",
+  "The best superpower","An instrument that's hard to learn","The most annoying sound","A vegetable kids hate",
+  "Something with wheels","A job you'd be terrible at","The best thing to do on a rainy day","Name a shape",
+  "Something you do every morning","Name a dessert","An animal that lives in the sea","A number between 1 and 10",
+  "Something you'd find in a classroom","The best smell in the world","A bird that can't fly",
+  "Something that makes you sneeze","A type of shoe","Something in a first-aid kit","The best movie snack",
+  "A chore nobody likes","Something that's soft","Something you can't live without","The most overrated food",
+  "A famous cartoon animal","Something you plug in","A word to describe a good friend","Something that's always late",
+  "The best age to be","Something you wear on your head","A farm animal","The best thing about holidays",
+  "Something you'd take to a desert island","A fast animal","Something that's round","A hot drink",
+  "Something you do at a birthday party","The best sandwich filling","A famous landmark",
+  // Singapore
+  "Name a hawker dish","Your usual kopitiam drink order","An MRT line colour","The most Singaporean word",
+  "The best supper food","A Singapore tourist attraction","A local snack from your childhood",
+  "Something you chope a table with","The king of local fruits","Something you'll find at a void deck",
+  "An island of Singapore","A festival celebrated in Singapore","One word to describe Singapore weather",
+  "The best side to order with chilli crab","A place in Singapore to watch the sunset","A local dessert",
+  "Something every Singaporean carries in their bag","The best neighbourhood for food",
+  // Church & faith
+  "Name a book of the Bible","One of the twelve disciples","An animal on Noah's ark","A fruit of the Spirit",
+  "The best instrument for worship","Something you'd bring to a church picnic","A king in the Bible",
+  "A miracle of Jesus","A famous Bible story","Something you'll find in a church building",
+  "A Christmas tradition","Something you eat at Easter","A word that describes God","The best cell group snack",
+  "A woman of the Bible","The best thing about Sunday","A gift the wise men brought",
+  "A Bible character known for being strong","A city in the Bible","A Bible character you'd invite to dinner",
+  "Something Jesus compared the Kingdom of God to","A Bible character who was a shepherd"
+];
+
+/* ---------- Small helpers ---------- */
+const $ = s => document.querySelector(s);
+function h(tag, props, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(props||{})){
+    if (v === false || v == null) continue;
+    if (k === "class") e.className = v;
+    else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (k === "value") e.value = v;
+    else e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()){
+    if (c == null || c === false) continue;
+    e.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return e;
+}
+const ls = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+function clean(s, max){
+  return String(s == null ? "" : s).replace(/[\p{C}]/gu, "").replace(/\s+/g, " ").trim().slice(0, max);
+}
+function norm(s){
+  let t = clean(s, 40).normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/^(the|a|an) /, "");
+  if (t.length > 3 && t.endsWith("s") && !t.endsWith("ss")) t = t.slice(0, -1);
+  return t.slice(0, 30);
+}
+function shuffle(a){ a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function sheepSVG(black, size){
+  size = size || 28;
+  const body = black ? "#2b2926" : "#ffffff", edge = black ? "#141312" : "#d8cfbd", face = black ? "#0d0c0b" : "#3a3631";
+  const span = document.createElement("span");
+  span.className = "sheepsvg";
+  span.innerHTML =
+    '<svg width="'+size+'" height="'+Math.round(size*0.8)+'" viewBox="0 0 60 48" aria-hidden="true">' +
+    '<rect x="17" y="32" width="5" height="13" rx="2.5" fill="'+face+'"/><rect x="34" y="32" width="5" height="13" rx="2.5" fill="'+face+'"/>' +
+    '<g fill="'+body+'" stroke="'+edge+'" stroke-width="2">' +
+    '<circle cx="16" cy="24" r="10"/><circle cx="27" cy="16" r="11"/><circle cx="39" cy="20" r="10"/><circle cx="36" cy="31" r="9"/><circle cx="21" cy="32" r="9"/></g>' +
+    '<g fill="'+body+'"><circle cx="16" cy="24" r="8.5"/><circle cx="27" cy="16" r="9.5"/><circle cx="39" cy="20" r="8.5"/><circle cx="36" cy="31" r="7.5"/><circle cx="21" cy="32" r="7.5"/><circle cx="28" cy="26" r="10"/></g>' +
+    '<ellipse cx="49" cy="24" rx="7.5" ry="9" fill="'+face+'"/>' +
+    '<ellipse cx="45" cy="17" rx="4" ry="2" fill="'+face+'" transform="rotate(-25 45 17)"/>' +
+    '<circle cx="51" cy="22" r="1.6" fill="#fff"/></svg>';
+  return span;
+}
+
+/* ---------- State ---------- */
+const PREFIX = "flocktogether-v1-";
+const S = {
+  view: "home", g: null, online: new Set(), answered: new Set(), mine: null,
+  isHost: false, code: null, peer: null, conn: null, conns: new Map(), answers: {},
+  connected: false, reconnTimer: null, screenKey: null, selected: new Set(),
+  busy: false, err: "", codeInput: "", qOrder: [], qPos: 0, deck: null, deckI: 0
+};
+S.pid = ls.get("flock.pid");
+if (typeof S.pid !== "string" || !/^p[a-z0-9]{6,24}$/.test(S.pid)){
+  S.pid = "p" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  ls.set("flock.pid", S.pid);
+}
+S.name = clean(ls.get("flock.name") || "", 16);
+const hashCode = (location.hash || "").replace("#", "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+if (hashCode) S.codeInput = hashCode;
+
+function engineReady(){ return typeof window.Peer === "function"; }
+function makeCode(){ const A = "ABCDEFGHJKMNPQRSTUVWXYZ"; let c = ""; for (let i = 0; i < 4; i++) c += A[Math.floor(Math.random() * A.length)]; return c; }
+function inviteURL(){ return location.href.split("#")[0] + "#" + S.code; }
+function newGame(){
+  return { phase: "lobby", rid: 0, qn: 0, q: "", target: 8, players: {}, sheep: null, ans: {}, merges: [], last: null, winners: [] };
+}
+function netError(err){
+  const t = err && err.type;
+  if (t === "browser-incompatible") return "This browser can't run live games. Try an up-to-date Chrome or Safari.";
+  if (t === "network" || t === "server-error" || t === "socket-error" || t === "socket-closed")
+    return "Can't reach the game server. Check your internet connection and try again.";
+  return "Something went wrong with the connection. Try again.";
+}
+function teardown(){
+  if (S.reconnTimer){ clearTimeout(S.reconnTimer); S.reconnTimer = null; }
+  try { if (S.peer) S.peer.destroy(); } catch (e) {}
+  S.peer = null; S.conn = null; S.conns = new Map(); S.connected = false;
+}
+
+/* ---------- Hosting ---------- */
+function startHosting(code, resumed){
+  if (!engineReady()){ S.err = "Couldn't load the game engine. Check your internet connection and reload."; render(); return; }
+  if (!S.name){ S.err = "Enter your name first."; render(); return; }
+  teardown();
+  S.busy = true; S.err = resumed ? "" : ""; S.isHost = true; S.code = code; render();
+  const peer = new Peer(PREFIX + code.toLowerCase());
+  S.peer = peer;
+  peer.on("open", () => {
+    if (S.peer !== peer) return;
+    S.connected = true; S.busy = false; S.err = ""; S.view = "game";
+    try { location.hash = code; } catch (e) {}
+    ensureSelfPlayer(); hostBroadcast();
+  });
+  peer.on("connection", conn => setupHostConn(conn));
+  peer.on("disconnected", () => {
+    if (S.peer !== peer) return;
+    S.connected = false; render();
+    setTimeout(() => { if (S.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } }, 2000);
+  });
+  peer.on("error", err => {
+    if (S.peer !== peer) return;
+    if (err && err.type === "unavailable-id"){
+      if (resumed){ S.err = "Reclaiming your game… (this can take a few seconds)"; render(); setTimeout(() => { if (S.peer === peer) startHosting(code, true); }, 4000); }
+      else { S.hostG = newGame(); S.answers = {}; startHosting(makeCode(), false); }
+      return;
+    }
+    if (err && err.type === "peer-unavailable") return;
+    S.err = netError(err); S.busy = false;
+    if (S.view !== "game") teardown();
+    render();
+  });
+}
+
+function setupHostConn(conn){
+  conn.on("data", d => {
+    if (!d || typeof d !== "object") return;
+    const g = S.hostG;
+    if (d.t === "hello"){
+      const pid = String(d.pid || "");
+      if (!/^p[a-z0-9]{6,24}$/.test(pid) || pid === S.pid) return;
+      const n = clean(d.name, 16) || "Player";
+      for (const [c, info] of S.conns) if (info.pid === pid && c !== conn){ S.conns.delete(c); try { c.close(); } catch (e) {} }
+      if (!g.players[pid]){
+        if (Object.keys(g.players).length >= 40){ try { conn.send({ t: "full" }); } catch (e) {} return; }
+        g.players[pid] = { n, s: 0 };
+      } else g.players[pid].n = n;
+      S.conns.set(conn, { pid });
+      hostBroadcast();
+    } else if (d.t === "ans"){
+      const info = S.conns.get(conn); if (!info) return;
+      if (g.phase !== "answer" || d.rid !== g.rid) return;
+      const a = d.a == null ? "" : clean(d.a, 30);
+      if (a && norm(a)) S.answers[info.pid] = { a, r: g.rid }; else delete S.answers[info.pid];
+      hostBroadcast();
+    }
+  });
+  const drop = () => { if (S.conns.has(conn)){ S.conns.delete(conn); hostBroadcast(); } };
+  conn.on("close", drop);
+  conn.on("error", drop);
+}
+
+function ensureSelfPlayer(){
+  const P = S.hostG.players;
+  if (!P[S.pid]) P[S.pid] = { n: S.name || "Host", s: 0 }; else P[S.pid].n = S.name || P[S.pid].n;
+}
+
+function hostBroadcast(){
+  const g = S.hostG; if (!g) return;
+  const online = new Set([S.pid]);
+  for (const info of S.conns.values()) online.add(info.pid);
+  const answered = Object.entries(S.answers).filter(([, v]) => v && v.r === g.rid).map(([p]) => p);
+  S.g = g; S.online = online; S.answered = new Set(answered);
+  const mineSelf = S.answers[S.pid]; S.mine = mineSelf && mineSelf.r === g.rid ? mineSelf.a : null;
+  const base = { t: "state", g, online: [...online], answered };
+  for (const [c, info] of S.conns){
+    const m = S.answers[info.pid];
+    try { if (c.open) c.send(Object.assign({}, base, { mine: m && m.r === g.rid ? m.a : null })); } catch (e) {}
+  }
+  ls.set("flock.host." + S.code, { g, answers: S.answers, at: Date.now() });
+  render();
+}
+
+/* ---------- Joining ---------- */
+function joinGame(rawCode){
+  const code = String(rawCode || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  if (!code){ S.err = "Enter a game code."; render(); return; }
+  if (!S.name){ S.err = "Enter your name first."; render(); return; }
+  if (!engineReady()){ S.err = "Couldn't load the game engine. Check your internet connection and reload."; render(); return; }
+  const saved = ls.get("flock.host." + code);
+  if (saved && saved.g && Date.now() - (saved.at || 0) < 8 * 3600e3){
+    S.hostG = saved.g; S.answers = saved.answers || {}; startHosting(code, true); return;
+  }
+  teardown();
+  S.busy = true; S.err = ""; S.isHost = false; S.code = code; S.g = null; S.mine = null; render();
+  const peer = new Peer(); S.peer = peer;
+  peer.on("open", () => { if (S.peer === peer) connectToHost(); });
+  peer.on("disconnected", () => {
+    setTimeout(() => { if (S.peer === peer && !peer.destroyed) { try { peer.reconnect(); } catch (e) {} } }, 2000);
+  });
+  peer.on("error", err => {
+    if (S.peer !== peer) return;
+    if (err && err.type === "peer-unavailable"){
+      if (S.view !== "game"){
+        S.err = "No game found with code " + code + ". Check the code, and make sure the host's screen is still open.";
+        S.busy = false; teardown(); render();
+      } else scheduleReconnect();
+      return;
+    }
+    if (S.view !== "game"){ S.err = netError(err); S.busy = false; teardown(); render(); }
+    else { S.connected = false; render(); scheduleReconnect(); }
+  });
+}
+
+function connectToHost(){
+  if (!S.peer || S.peer.destroyed) return;
+  const conn = S.peer.connect(PREFIX + S.code.toLowerCase(), { reliable: true });
+  S.conn = conn;
+  const timer = setTimeout(() => {
+    if (conn.open || S.conn !== conn) return;
+    try { conn.close(); } catch (e) {}
+    if (S.view !== "game"){
+      S.err = "Couldn't connect to the host. Some Wi-Fi networks block games like this — try switching to mobile data.";
+      S.busy = false; teardown(); render();
+    } else scheduleReconnect();
+  }, 15000);
+  conn.on("open", () => {
+    clearTimeout(timer);
+    if (S.conn !== conn) return;
+    S.connected = true; S.busy = false; S.err = ""; S.view = "game";
+    try { location.hash = S.code; } catch (e) {}
+    conn.send({ t: "hello", pid: S.pid, name: S.name });
+    render();
+  });
+  conn.on("data", d => {
+    if (S.conn !== conn || !d || typeof d !== "object") return;
+    if (d.t === "state" && d.g && typeof d.g === "object"){
+      S.g = d.g;
+      S.online = new Set(Array.isArray(d.online) ? d.online : []);
+      S.answered = new Set(Array.isArray(d.answered) ? d.answered : []);
+      S.mine = typeof d.mine === "string" ? d.mine : null;
+      render();
+    } else if (d.t === "full"){ S.err = "Sorry, this game is full."; render(); }
+  });
+  conn.on("close", () => {
+    if (S.conn !== conn) return;
+    S.connected = false; render(); scheduleReconnect();
+  });
+}
+
+function scheduleReconnect(){
+  if (S.reconnTimer || S.view !== "game" || S.isHost) return;
+  S.reconnTimer = setTimeout(() => {
+    S.reconnTimer = null;
+    if (S.peer && !S.peer.destroyed && S.view === "game" && !S.connected) connectToHost();
+  }, 3000);
+}
+
+function leaveGame(){
+  if (S.isHost && S.code) ls.del("flock.host." + S.code);
+  teardown();
+  Object.assign(S, { g: null, code: null, isHost: false, hostG: null, answers: {}, view: "home", mine: null, err: "", online: new Set(), answered: new Set() });
+  try { location.hash = ""; } catch (e) {}
+  render();
+}
+
+/* ---------- Game logic (host) ---------- */
+function nextQuestion(){
+  if (S.qPos >= S.qOrder.length){ S.qOrder = shuffle(QUESTIONS); S.qPos = 0; }
+  return S.qOrder[S.qPos++];
+}
+function startRound(q){
+  const g = S.hostG;
+  g.phase = "answer"; g.rid = (g.rid || 0) + 1; g.qn = (g.qn || 0) + 1;
+  g.q = q || nextQuestion(); g.ans = {}; g.merges = []; g.last = null;
+  S.answers = {}; S.selected.clear(); hostBroadcast();
+}
+function swapQuestion(q){
+  const g = S.hostG;
+  g.rid = (g.rid || 0) + 1; g.q = q || nextQuestion(); g.ans = {}; g.merges = [];
+  S.answers = {}; hostBroadcast();
+}
+function reveal(){
+  const g = S.hostG; const ans = {};
+  for (const [pid, v] of Object.entries(S.answers)){
+    if (v && v.r === g.rid && g.players[pid] && norm(v.a)) ans[pid] = v.a;
+  }
+  g.ans = ans; g.merges = []; g.phase = "reveal"; S.selected.clear(); hostBroadcast();
+}
+function rootOf(g, k){
+  const m = new Map((g.merges || []).filter(x => Array.isArray(x) && x.length === 2));
+  let n = 0; while (m.has(k) && n++ < 60) k = m.get(k);
+  return k;
+}
+function groupsOf(g){
+  const map = new Map();
+  for (const [pid, text] of Object.entries(g.ans || {})){
+    const k0 = norm(text); if (!k0) continue;
+    const k = rootOf(g, k0);
+    if (!map.has(k)) map.set(k, { key: k, label: text, pids: [], alts: new Set() });
+    const grp = map.get(k); grp.pids.push(pid);
+    if (norm(grp.label) !== norm(text)) grp.alts.add(text);
+  }
+  return [...map.values()].sort((a, b) => b.pids.length - a.pids.length || a.label.localeCompare(b.label));
+}
+function mergeSelected(){
+  const g = S.hostG; const keys = [...S.selected]; if (keys.length < 2) return;
+  const target = keys[0];
+  for (const k of keys.slice(1)) if (k !== target) g.merges.push([k, target]);
+  S.selected.clear(); hostBroadcast();
+}
+function scoreRound(){
+  const g = S.hostG; const gs = groupsOf(g);
+  const max = gs.length ? gs[0].pids.length : 0;
+  const top = gs.filter(x => x.pids.length === max);
+  let scored = [], herd = null, tie = false;
+  if (max > 1 && top.length === 1){
+    herd = top[0].label; scored = top[0].pids.slice();
+    for (const pid of scored) if (g.players[pid]) g.players[pid].s += 1;
+  } else if (max > 1) tie = true;
+  const lone = gs.filter(x => x.pids.length === 1);
+  let sheepTo = null, sheepAns = null;
+  if (lone.length === 1 && gs.length > 1){ sheepTo = lone[0].pids[0]; sheepAns = lone[0].label; g.sheep = sheepTo; }
+  g.last = { herd, scored, tie, sheepTo, sheepAns };
+  g.winners = Object.entries(g.players).filter(([pid, p]) => p.s >= g.target && pid !== g.sheep).map(([pid]) => pid);
+  g.phase = g.winners.length ? "over" : "scored";
+  hostBroadcast();
+}
+function playAgain(){
+  const g = S.hostG;
+  for (const p of Object.values(g.players)) p.s = 0;
+  Object.assign(g, { phase: "lobby", sheep: null, ans: {}, merges: [], last: null, winners: [], qn: 0 });
+  S.answers = {}; hostBroadcast();
+}
+
+/* ---------- Player actions ---------- */
+function sendAnswer(a){
+  const g = S.g; if (!g) return;
+  if (S.isHost){
+    if (a) S.answers[S.pid] = { a, r: g.rid }; else delete S.answers[S.pid];
+    hostBroadcast();
+  } else {
+    S.mine = a || null;
+    try { if (S.conn && S.conn.open) S.conn.send({ t: "ans", rid: g.rid, a: a || null }); } catch (e) {}
+    render();
+  }
+}
+function submitAnswer(){
+  const inp = $("#ansInput"); if (!inp) return;
+  const v = clean(inp.value, 30); if (!v || !norm(v)) return;
+  sendAnswer(v);
+}
+function editAnswer(){
+  const prev = S.mine || "";
+  sendAnswer(null);
+  setTimeout(() => { const i = $("#ansInput"); if (i){ i.value = prev; i.focus(); } }, 0);
+}
+
+/* ---------- Rendering ---------- */
+function render(){
+  const g = S.g;
+  const answered = !!(g && S.mine);
+  const key = [S.view, g ? g.phase : "-", g ? g.rid : "-", S.isHost, S.busy, S.err, answered, S.view === "deck" ? S.deckI : ""].join("|");
+  if (key !== S.screenKey){
+    S.screenKey = key;
+    $("#app").replaceChildren(buildScreen(g));
+    if (g && g.phase === "lobby") drawQR();
+  }
+  updateDyn(g);
+}
+
+function drawQR(){
+  const el = $("#qr"); if (!el || !S.code) return;
+  el.replaceChildren();
+  if (typeof window.QRCode !== "function" || location.protocol === "file:") { el.style.display = "none"; return; }
+  try { new QRCode(el, { text: inviteURL(), width: 168, height: 168, colorDark: "#1E2A23", colorLight: "#FFFDF7" }); } catch (e) { el.style.display = "none"; }
+}
+
+function howToPlay(open){
+  return h("details", { class: "card", open: open || false },
+    h("summary", { text: "How to play" }),
+    h("ol", { class: "rules small" },
+      h("li", { text: "Everyone answers the same question on their own phone — privately." }),
+      h("li", {}, "You're trying to give the ", h("b", { text: "same answer as most people" }), ", not the clever one."),
+      h("li", { text: "If one answer is the clear favourite, everyone who gave it scores a point. A tie at the top scores nothing." }),
+      h("li", {}, "If exactly one person is alone with their answer, they get the ", h("b", { text: "Black Sheep" }), ". It stays with them until someone else is the lone answer."),
+      h("li", { text: "First to the target score wins — but you can't win while holding the Black Sheep." }),
+      h("li", { text: "The host can merge answers that mean the same thing before scoring. Arguing is encouraged!" })
+    ));
+}
+
+function buildScreen(g){
+  if (S.view === "deck") return buildDeck();
+  if (S.view === "game") return buildGame(g);
+  return buildHome();
+}
+
+function buildHome(){
+  const nameInp = h("input", { id: "nameInput", placeholder: "Your name", maxlength: "16", value: S.name, autocomplete: "nickname",
+    oninput: e => { S.name = clean(e.target.value, 16); ls.set("flock.name", S.name); } });
+  const codeInp = h("input", { id: "codeInput", placeholder: "Code", maxlength: "6", value: S.codeInput, autocapitalize: "characters",
+    style: "text-transform:uppercase;letter-spacing:3px;font-weight:800",
+    oninput: e => { S.codeInput = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6); e.target.value = S.codeInput; },
+    onkeydown: e => { if (e.key === "Enter") joinGame(S.codeInput); } });
+  return h("div", {},
+    h("div", { class: "hero" },
+      h("div", { class: "logo" }, sheepSVG(false, 52), h("span", { class: "bob" }, sheepSVG(false, 40)), sheepSVG(true, 46)),
+      h("h1", { text: "Flock Together" }),
+      h("p", { text: "Think like the crowd. Don't be the black sheep." })),
+    h("div", { class: "card" },
+      h("label", { class: "lbl", for: "nameInput", text: "Your name" }), nameInp,
+      h("div", { style: "height:14px" }),
+      h("button", { class: "btn btn-block", disabled: S.busy,
+        onclick: () => { S.hostG = newGame(); S.answers = {}; startHosting(makeCode(), false); } }, S.busy ? "Connecting…" : "Host a new game"),
+      h("div", { class: "divider", text: "or join a friend" }),
+      h("div", { class: "row" }, h("div", { class: "grow" }, codeInp),
+        h("button", { class: "btn btn-sun", disabled: S.busy, onclick: () => joinGame(S.codeInput) }, "Join")),
+      S.err ? h("div", { class: "err", text: S.err }) : null,
+      location.protocol === "file:" ? h("div", { class: "note", text: "Tip: you've opened this file from your computer. To let players join from their phones, upload it to a website first (see the setup notes)." }) : null),
+    h("div", { class: "card" },
+      h("div", { class: "row" },
+        h("div", { class: "grow" },
+          h("h3", { text: "Screen-share mode" }),
+          h("div", { class: "small muted", text: "One screen shows the questions (Zoom or a projector). Everyone answers on paper or in chat, then reveal together." })),
+        h("button", { class: "btn-ghost btn-small", onclick: () => { S.deck = shuffle(QUESTIONS); S.deckI = 0; S.view = "deck"; render(); } }, "Open"))),
+    howToPlay(false));
+}
+
+function buildDeck(){
+  const q = S.deck[S.deckI];
+  const go = d => { S.deckI = Math.max(0, Math.min(S.deck.length - 1, S.deckI + d)); render(); };
+  return h("div", {},
+    h("div", { class: "topbar" },
+      h("button", { class: "btn-ghost btn-small", onclick: () => { S.view = "home"; render(); } }, "← Back"),
+      h("span", { class: "chip", text: (S.deckI + 1) + " / " + S.deck.length })),
+    h("div", { class: "card qcard" }, h("div", { class: "qn", text: "Question " + (S.deckI + 1) }), h("div", { class: "deckq", text: q })),
+    h("div", { class: "actions two" },
+      h("button", { class: "btn-ghost", disabled: S.deckI === 0, onclick: () => go(-1) }, "Previous"),
+      h("button", { class: "btn", disabled: S.deckI >= S.deck.length - 1, onclick: () => go(1) }, "Next question")),
+    h("div", { class: "note", text: "Scoring: the most common answer scores everyone who gave it 1 point. If exactly one person is alone, they take the Black Sheep. First to 8 without the Black Sheep wins." }),
+    howToPlay(false));
+}
+
+function buildGame(g){
+  const top = h("div", { class: "topbar" },
+    h("span", { class: "chip" }, h("span", { class: "dot", id: "connDot" }), "Game ", h("b", { text: S.code })),
+    h("div", { class: "row" },
+      S.isHost ? h("span", { class: "hostbadge", text: "HOST" }) : null,
+      h("button", { class: "btn-ghost btn-small", onclick: leaveGame }, S.isHost ? "End game" : "Leave")));
+  const parts = [top, h("div", { id: "dynConn" })];
+  if (S.err) parts.push(h("div", { class: "err", text: S.err }));
+  if (!g){
+    parts.push(h("div", { class: "card waiting" }, h("span", { class: "bob" }, sheepSVG(false, 54)),
+      h("div", { class: "display", text: "Connecting to the host…" })));
+    parts.push(howToPlay(true));
+    return h("div", {}, parts);
+  }
+  const qcard = () => h("div", { class: "card qcard" },
+    h("div", { class: "qn", text: "Question " + (g.qn || 1) }), h("div", { class: "q", text: g.q || "" }));
+
+  if (g.phase === "lobby"){
+    parts.push(h("div", { class: "card center" },
+      h("div", { class: "muted small", text: "Scan to join, or open this page and enter the code" }),
+      h("div", { id: "qr", style: "display:flex;justify-content:center;margin:12px 0" }),
+      h("div", { class: "codebig", text: S.code }),
+      h("button", { class: "btn-ghost btn-small", onclick: async e => {
+        try { await navigator.clipboard.writeText(inviteURL()); e.target.textContent = "Link copied!"; } catch (er) { e.target.textContent = inviteURL(); }
+      } }, "Copy invite link")));
+    parts.push(h("div", { class: "card" }, h("h3", { text: "Players" }), h("div", { id: "dynLobby" })));
+    if (S.isHost){
+      const sel = h("select", { id: "targetSel", onchange: e => { S.hostG.target = parseInt(e.target.value, 10) || 8; hostBroadcast(); } },
+        [5, 8, 10, 12].map(n => h("option", { value: String(n), selected: g.target === n }, n + " points")));
+      parts.push(h("div", { class: "card" },
+        h("label", { class: "lbl", for: "targetSel", text: "Play to" }), sel,
+        h("div", { class: "actions" }, h("button", { class: "btn", id: "startBtn", onclick: () => startRound() }, "Start game")),
+        h("div", { class: "small muted", style: "margin-top:10px", text: "Keep this screen open — your device runs the game. If it reloads, rejoin with the same code to carry on." })));
+    } else {
+      parts.push(h("div", { class: "card waiting" }, h("span", { class: "bob" }, sheepSVG(false, 44)),
+        h("div", { class: "display", text: "You're in! Waiting for the host to start." })));
+    }
+  }
+
+  if (g.phase === "answer"){
+    parts.push(qcard());
+    if (S.mine){
+      parts.push(h("div", { class: "card" },
+        h("div", { class: "mine" }, h("span", {}, "Locked in: ", h("b", { text: S.mine })),
+          h("button", { class: "btn-ghost btn-small", onclick: editAnswer }, "Change")),
+        h("div", { class: "small muted", style: "margin-top:8px", text: "Waiting for everyone else…" })));
+    } else {
+      const inp = h("input", { id: "ansInput", placeholder: "Your answer", maxlength: "30", autocomplete: "off",
+        onkeydown: e => { if (e.key === "Enter") submitAnswer(); } });
+      parts.push(h("div", { class: "card" },
+        h("label", { class: "lbl", for: "ansInput", text: "What will most people say?" }),
+        h("div", { class: "row" }, h("div", { class: "grow" }, inp), h("button", { class: "btn", onclick: submitAnswer }, "Lock in"))));
+    }
+    parts.push(h("div", { class: "card" }, h("div", { id: "dynProgress" })));
+    if (S.isHost){
+      const custom = h("input", { id: "customQ", placeholder: "Type your own question", maxlength: "90" });
+      parts.push(h("div", { class: "card" },
+        h("h3", { text: "Host controls" }),
+        h("div", { class: "actions" },
+          h("button", { class: "btn btn-sun", id: "revealBtn", onclick: reveal }, "Reveal answers"),
+          h("button", { class: "btn-ghost", onclick: () => swapQuestion() }, "Skip — new question")),
+        h("details", { style: "margin-top:12px" }, h("summary", { class: "small", text: "Ask a custom question" }),
+          h("div", { class: "row", style: "margin-top:8px" }, h("div", { class: "grow" }, custom),
+            h("button", { class: "btn btn-small", onclick: () => { const q = clean(custom.value, 90); if (q) swapQuestion(q); } }, "Use")))));
+    }
+  }
+
+  if (g.phase === "reveal"){
+    parts.push(qcard());
+    parts.push(h("div", { class: "card" },
+      h("h3", { text: "The answers" }),
+      h("div", { class: "small muted", style: "margin:4px 0 10px",
+        text: S.isHost ? "Tap answers that mean the same thing, then Merge. When you're happy, score the round."
+                       : "Argue your case! The host decides which answers count as the same." }),
+      h("div", { id: "dynGroups", class: "groups" })));
+    if (S.isHost) parts.push(h("div", { class: "card" }, h("div", { id: "dynHostReveal" })));
+  }
+
+  if (g.phase === "scored" || g.phase === "over"){
+    parts.push(h("div", { class: "card" }, h("div", { id: "dynResult" })));
+    if (g.phase === "scored"){
+      parts.push(qcard());
+      parts.push(h("div", { class: "card" }, h("div", { id: "dynGroups", class: "groups" })));
+    }
+    if (S.isHost){
+      parts.push(h("div", { class: "actions" },
+        g.phase === "scored"
+          ? h("button", { class: "btn", onclick: () => startRound() }, "Next question")
+          : h("button", { class: "btn", onclick: playAgain }, "Play again")));
+    }
+  }
+
+  if (g.phase !== "lobby") parts.push(h("div", { class: "card" }, h("h3", { text: "Scores" }), h("div", { id: "dynScores" })));
+  parts.push(howToPlay(false));
+  return h("div", {}, parts);
+}
+
+function nameOf(g, pid){ return (g.players && g.players[pid] && clean(g.players[pid].n, 16)) || "Someone"; }
+function namesList(g, pids){
+  const n = (pids || []).map(p => nameOf(g, p));
+  if (n.length <= 1) return n.join("");
+  return n.slice(0, -1).join(", ") + " and " + n[n.length - 1];
+}
+
+function updateDyn(g){
+  const dot = $("#connDot"); if (dot) dot.classList.toggle("on", !!S.connected);
+  const dc = $("#dynConn");
+  if (dc) dc.replaceChildren(!S.connected && S.view === "game"
+    ? h("div", { class: "note", text: S.isHost ? "Reconnecting to the game server…" : "Lost connection to the host — reconnecting…" }) : "");
+  if (!g) return;
+  const online = S.online, answeredSet = S.answered;
+  const players = Object.entries(g.players || {});
+
+  const lobby = $("#dynLobby");
+  if (lobby){
+    const list = players.filter(([pid]) => online.has(pid));
+    lobby.replaceChildren(list.length
+      ? h("div", { class: "players" }, list.map(([pid, p]) =>
+          h("span", { class: "pchip" }, sheepSVG(false, 18), clean(p.n, 16), pid === S.pid ? h("span", { class: "you", text: "you" }) : null)))
+      : h("div", { class: "muted small", text: "Nobody here yet." }));
+    const sb = $("#startBtn"); if (sb) sb.textContent = "Start game (" + list.length + " player" + (list.length === 1 ? "" : "s") + ")";
+  }
+
+  const prog = $("#dynProgress");
+  if (prog){
+    const here = players.filter(([pid]) => online.has(pid));
+    const done = here.filter(([pid]) => answeredSet.has(pid)).length;
+    prog.replaceChildren(
+      h("div", { class: "row" }, h("b", { class: "grow", text: done + " of " + here.length + " answered" }),
+        h("div", { class: "bar", style: "width:110px" }, h("i", { style: "width:" + (here.length ? Math.round(done / here.length * 100) : 0) + "%" }))),
+      h("div", { class: "players" }, here.map(([pid, p]) =>
+        h("span", { class: "pchip" + (answeredSet.has(pid) ? " done" : "") }, answeredSet.has(pid) ? "✓" : "…", clean(p.n, 16)))));
+    const rb = $("#revealBtn"); if (rb) rb.textContent = done >= here.length && here.length ? "Everyone's in — reveal answers" : "Reveal answers";
+  }
+
+  const grpEl = $("#dynGroups");
+  if (grpEl){
+    const gs = groupsOf(g);
+    const last = g.last || {};
+    if (!gs.length) grpEl.replaceChildren(h("div", { class: "muted", text: "No answers this round." }));
+    else grpEl.replaceChildren(...gs.map(grp => {
+      let cls = "group";
+      if (g.phase === "reveal" && S.selected.has(grp.key)) cls += " sel";
+      if (g.phase === "scored" && last.herd && grp.pids.some(p => (last.scored || []).includes(p))) cls += " herd";
+      if (g.phase === "scored" && last.sheepTo && grp.pids.length === 1 && grp.pids[0] === last.sheepTo) cls += " lone";
+      const inner = [
+        h("div", { class: "ans" }, h("span", { text: clean(grp.label, 30) }), h("span", { class: "cnt", text: grp.pids.length + (grp.pids.length === 1 ? " vote" : " votes") })),
+        grp.alts.size ? h("div", { class: "alts", text: "also: " + [...grp.alts].map(a => clean(a, 30)).join(", ") }) : null,
+        h("div", { class: "who", text: namesList(g, grp.pids) })
+      ];
+      if (g.phase === "reveal" && S.isHost){
+        return h("button", { class: cls, onclick: () => { S.selected.has(grp.key) ? S.selected.delete(grp.key) : S.selected.add(grp.key); updateDyn(S.g); } }, inner);
+      }
+      return h("div", { class: cls }, inner);
+    }));
+  }
+
+  const hr = $("#dynHostReveal");
+  if (hr){
+    const n = S.selected.size;
+    hr.replaceChildren(h("div", { class: "actions" },
+      h("button", { class: "btn btn-sun", disabled: n < 2, onclick: mergeSelected }, n < 2 ? "Select 2+ answers to merge" : "Merge " + n + " answers"),
+      (g.merges && g.merges.length) ? h("button", { class: "btn-ghost", onclick: () => { S.hostG.merges = []; S.selected.clear(); hostBroadcast(); } }, "Undo all merges") : null,
+      h("button", { class: "btn", onclick: scoreRound }, "Score this round")));
+  }
+
+  const res = $("#dynResult");
+  if (res){
+    const last = g.last || {};
+    const kids = [];
+    if (g.phase === "over"){
+      kids.push(h("div", { class: "center" }, sheepSVG(false, 60), sheepSVG(false, 48), sheepSVG(false, 60)));
+      kids.push(h("div", { class: "bigwin", text: namesList(g, g.winners || []) + ((g.winners || []).length > 1 ? " win!" : " wins!") }));
+      kids.push(h("p", { class: "center muted", text: "Truly one with the flock." }));
+    }
+    if (last.herd) kids.push(h("p", {}, "The herd said ", h("b", { text: "“" + clean(last.herd, 30) + "”" }), " — +1 for " + namesList(g, last.scored) + "."));
+    else if (last.tie) kids.push(h("p", { text: "It's a tie at the top — nobody scores this round." }));
+    else kids.push(h("p", { text: "No two answers matched — nobody scores this round." }));
+    if (last.sheepTo) kids.push(h("p", {}, sheepSVG(true, 26), " ", h("b", { text: nameOf(g, last.sheepTo) }), " was alone with “" + clean(last.sheepAns, 30) + "” and takes the Black Sheep."));
+    else if (g.sheep) kids.push(h("p", {}, sheepSVG(true, 26), " ", h("b", { text: nameOf(g, g.sheep) }), " still has the Black Sheep."));
+    res.replaceChildren(h("div", { class: "result" }, kids));
+  }
+
+  const sc = $("#dynScores");
+  if (sc){
+    const rows = players.slice().sort((a, b) => (b[1].s || 0) - (a[1].s || 0) || String(a[1].n).localeCompare(String(b[1].n)));
+    sc.replaceChildren(...rows.map(([pid, p]) =>
+      h("div", { class: "score-row" + (online.has(pid) ? "" : " off") },
+        h("div", { class: "nm" }, h("span", { class: "t", text: clean(p.n, 16) }),
+          pid === S.pid ? h("span", { class: "you", text: "you" }) : null,
+          g.sheep === pid ? sheepSVG(true, 22) : null,
+          (g.phase === "answer" && answeredSet.has(pid)) ? h("span", { class: "small", style: "color:var(--green-2)", text: "✓" }) : null),
+        h("div", { class: "bar" }, h("i", { style: "width:" + Math.min(100, Math.round((p.s || 0) / (g.target || 8) * 100)) + "%" })),
+        h("div", { class: "pts", text: String(p.s || 0) }))),
+      h("div", { class: "small muted", style: "margin-top:8px", text: "First to " + (g.target || 8) + " without the Black Sheep wins." }));
+  }
+}
+
+render();
+if (S.codeInput && S.name){
+  const saved = ls.get("flock.host." + S.codeInput);
+  if (saved && saved.g && Date.now() - (saved.at || 0) < 8 * 3600e3) joinGame(S.codeInput);
+}
+</script>
+</body>
+</html>
